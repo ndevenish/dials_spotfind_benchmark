@@ -60,8 +60,8 @@ endif()
 #target_link_libraries(thresholding PUBLIC 
 #		Dials::Dials benchmark::benchmark Eigen::Eigen)
 
-add_custom_command(OUTPUT dispersion.o
-                   COMMAND ispc ${CMAKE_SOURCE_DIR}/dispersion.ispc -o dispersion.o
+add_custom_command(OUTPUT dispersion.o dispersion.h
+                   COMMAND ispc ${CMAKE_SOURCE_DIR}/dispersion.ispc -o dispersion.o -h dispersion.h
                    DEPENDS dispersion.ispc)
 
 add_subdirectory(external)
@@ -69,8 +69,10 @@ add_subdirectory(external)
 
 add_executable(spotfind_test spotfind_test.cxx dispersion.o)
 target_link_libraries(spotfind_test PUBLIC Dials::Dials gtest_main tinytiff)
+target_include_directories(spotfind_test PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(spotfind_bm spotfind_bm.cxx dispersion.o)
+target_include_directories(spotfind_bm PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(spotfind_bm PUBLIC Dials::Dials benchmark::benchmark tinytiff)
 # Optionally include itt
 if (TARGET itt)

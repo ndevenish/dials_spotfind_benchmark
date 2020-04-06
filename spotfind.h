@@ -25,7 +25,7 @@ const double nsig_b_ = 6.0;
 const double nsig_s_ = 3.0;
 
 /// Class to generate sample image data
-template <typename T>
+template <typename T, typename GAIN_T = double>
 class ImageSource {
 public:
   ImageSource()
@@ -39,7 +39,7 @@ public:
                                           af::c_grid<2>(IMAGE_W, IMAGE_H));
     mask = af::const_ref<bool, af::c_grid<2>>(mask_store.begin(),
                                               af::c_grid<2>(IMAGE_W, IMAGE_H));
-    gain = af::const_ref<double, af::c_grid<2>>(gain_store.begin(),
+    gain = af::const_ref<GAIN_T, af::c_grid<2>>(gain_store.begin(),
                                                 af::c_grid<2>(IMAGE_W, IMAGE_H));
     dst = af::ref<bool, af::c_grid<2>>(destination_store.begin(),
                                        af::c_grid<2>(IMAGE_W, IMAGE_H));
@@ -138,13 +138,13 @@ public:
   af::shared<bool> destination_store;
   af::shared<T> image_store;
   af::shared<bool> mask_store;
-  af::shared<double> gain_store;
+  af::shared<GAIN_T> gain_store;
   af::shared<bool> prefound_store;  // For checking results
   //   std::vector<char> sat_store;
 
   af::const_ref<T, af::c_grid<2>> src;
   af::const_ref<bool, af::c_grid<2>> mask;
-  af::const_ref<double, af::c_grid<2>> gain;
+  af::const_ref<GAIN_T, af::c_grid<2>> gain;
   af::ref<bool, af::c_grid<2>> dst;
 };
 

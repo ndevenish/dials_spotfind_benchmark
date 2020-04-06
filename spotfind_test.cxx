@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "dials/algorithms/image/threshold/local.h"
+#include "dispersion.h"
 #include "gtest/gtest.h"
 #include "spotfind.h"
 
@@ -30,4 +31,8 @@ TEST(Existing, DispersionGain) {
   ImageSource<double> src;
   algo.threshold_w_gain(src.src, src.mask, src.gain, src.dst);
   ASSERT_TRUE(src.validate_dst(src.dst));
+}
+
+TEST(ISPC, Initial) {
+  ImageSource<double> src;
 }
