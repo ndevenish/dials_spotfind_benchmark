@@ -14,9 +14,15 @@ set(CMAKE_CXX_STANDARD 11)
 find_package(Boost REQUIRED)
 find_package(Dials REQUIRED)
 find_package(benchmark REQUIRED)
-#find_package(GTest REQUIRED)
 set(EIGEN_ROOT ${DIALS_BUILD}/../modules/eigen)
 find_package(Eigen3 REQUIRED)
+
+add_subdirectory(googletest)
+
+
+
+
+
 
 # if (USE_OPENMP)
 #   find_package(OpenMP REQUIRED)
@@ -38,6 +44,19 @@ find_package(Eigen3 REQUIRED)
 #add_executable(thresholding threshold.cxx)
 #target_link_libraries(thresholding PUBLIC 
 #		Dials::Dials benchmark::benchmark Eigen::Eigen)
+
+add_custom_command(OUTPUT dispersion.o
+                   COMMAND ispc ${CMAKE_SOURCE_DIR}/dispersion.ispc -o dispersion.o
+                   DEPENDS dispersion.ispc)
+
+add_subdirectory(fast_hdf5_eiger_read)
+
+
+add_executable(spotfind_test spotfind_test.cxx dispersion.o)
+target_link_libraries(spotfind_test PUBLIC Dials::Dials gtest_main)
+
+add_executable(spotfind_bm spotfind_bm.cxx dispersion.o)
+target_link_libraries(spotfind_bm PUBLIC Dials::Dials benchmark::benchmark)
 
 # add_executable(sat sat/sat_main.cxx sat/sat_refactor.cxx sat/sat_original.cxx
 #               sat/sat_vector.cxx)
