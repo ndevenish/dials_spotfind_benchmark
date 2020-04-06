@@ -61,7 +61,7 @@ endif()
 #		Dials::Dials benchmark::benchmark Eigen::Eigen)
 
 add_custom_command(OUTPUT dispersion.o dispersion.h
-                   COMMAND ispc ${CMAKE_SOURCE_DIR}/dispersion.ispc -o dispersion.o -h dispersion.h
+                   COMMAND ispc -g ${CMAKE_SOURCE_DIR}/dispersion.ispc -o dispersion.o -h dispersion.h
                    DEPENDS dispersion.ispc)
 
 add_subdirectory(external)

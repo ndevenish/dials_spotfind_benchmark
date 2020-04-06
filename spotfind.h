@@ -74,6 +74,19 @@ public:
       }
     }
 
+    // int n = 0;
+    // long sum = 0;
+    // long sumsq = 0;
+    // for (int y = 0; y < IMAGE_H; ++y) {
+    //   for (int x = 0; x < IMAGE_W; ++x) {
+    //     n += 1;
+    //     sum += src(y,x);
+    //     sumsq += src(y,x)*src(y,x);
+    //   }
+    // }
+    std::cout << "Diagnostics:\n  n:    " << n << "\n  sum:   " << sum
+              << "\n  sumsq: " << sumsq << std::endl;
+
     // Run spotfinding to have a "precalculated" result to validate against
     auto prefdst = af::ref<bool, af::c_grid<2>>(prefound_store.begin(),
                                                 af::c_grid<2>(IMAGE_W, IMAGE_H));
