@@ -24,27 +24,6 @@ const double threshold_ = 0.0;
 const double nsig_b_ = 6.0;
 const double nsig_s_ = 3.0;
 
-// std::vector<unsigned char> compress_cbf(af::const_ref<T, af::c_grid<2>> image) {
-//   // std::vector<unsigned_char
-//   auto data_view = image.as_1d();
-//   long element_count = data_view.size();
-
-//   std::vector<unsigned char> store;
-//   store.reserve(element_count * sizeof(int32_t));
-//   unsigned long i_offset = 0, i_pxel = 0;
-//   int32_t delta = 0, last_pixel = 0;
-
-//   for (int i_pixel = 0; i_pixel < data_view.size(); ++i_pixel) {
-//     delta = data_view[i_pixel] - last_pixel;
-//     last_pixel = data_view[i_pixel];
-//     if ((-127 <= delta) && (delta <= 127)) {
-//       output
-//     }
-//   }
-//       //   std::size_t ysize = src.accessor()[0];
-//       // std::size_t xsize = src.accessor()[1];
-// }
-
 /// Class to generate sample image data
 template <typename T>
 class ImageSource {
@@ -53,7 +32,8 @@ public:
       : destination_store(IMAGE_W * IMAGE_H),
         image_store(IMAGE_W * IMAGE_H),
         mask_store(IMAGE_W * IMAGE_H),
-        gain_store(IMAGE_W * IMAGE_H) {
+        gain_store(IMAGE_W * IMAGE_H),
+        prefound_store(IMAGE_W * IMAGE_H) {
     // Generate the ref objects we will be using
     src = af::const_ref<T, af::c_grid<2>>(image_store.begin(),
                                           af::c_grid<2>(IMAGE_W, IMAGE_H));
@@ -79,34 +59,49 @@ public:
     std::poisson_distribution<int> poisson(1.0);
 
     // Write a poisson background over the whole image
-    // for (int x = 0; x < IMAGE_W; x += 1) {
-    //   for (int y = 0; y < IMAGE_W; y += 1) {
-    //     writable_src(x, y) = poisson(generator);
-    //   }
-    // }
+    for (int y = 0; y < IMAGE_H; y += 1) {
+      for (int x = 0; x < IMAGE_W; x += 1) {
+        writable_src(x, y) = poisson(generator);
+      }
+    }
 
     int count = 0;
     // Just put some high pixels for now
-    for (int x = 0; x < IMAGE_W; x += 42) {
-      for (int y = 0; y < IMAGE_W; y += 42) {
+    for (int y = 0; y < IMAGE_H; y += 42) {
+      for (int x = 0; x < IMAGE_W; x += 42) {
         writable_src(x, y) = 100;
         count += 1;
       }
     }
-    std::cout << "Pixels: " << count << std::endl;
 
+    // Run spotfinding to have a "precalculated" result to validate against
+    auto prefdst = af::ref<bool, af::c_grid<2>>(prefound_store.begin(),
+                                                af::c_grid<2>(IMAGE_W, IMAGE_H));
+    auto algo = dials::algorithms::DispersionThreshold(
+      image_size_, kernel_size_, nsig_b_, nsig_s_, threshold_, min_count_);
+    algo.threshold(src, mask, prefdst);
+
+    // std::cout << "Pixels: " << count << std::endl;
     // BOOST_ASSERT(count == 9216);
-
-    // Calculate the SAT - of our sample/random data, but still ensures
-    // // that any basic dependencies on SAT-style data are fulfilled
-    // auto dp = dials::algorithms::DispersionThreshold(
-    //     af::tiny<int, 2>(IMAGE_W, IMAGE_H), kernel_size_, nsig_b_, nsig_s_,
-    //     threshold_, min_count_);
-    // dp.compute_sat(table, src, mask);
-
 #ifdef BENCHMARK
+    // If doing a benchmark, make sure to avoid inlining issues
     benchmark::ClobberMemory();
 #endif
+  }
+
+  bool validate_dst(af::const_ref<bool, af::c_grid<2>> tocheck) {
+    auto prefdst = af::ref<bool, af::c_grid<2>>(prefound_store.begin(),
+                                                af::c_grid<2>(IMAGE_W, IMAGE_H));
+    if ((tocheck.accessor()[0] != prefdst.accessor()[0])
+        && (tocheck.accessor()[1] != prefdst.accessor()[1])) {
+      return false;
+    }
+    for (int y = 0; y < IMAGE_H; y += 1) {
+      for (int x = 0; x < IMAGE_W; x += 1) {
+        if (tocheck(y, x) != prefdst(y, x)) return false;
+      }
+    }
+    return true;
   }
 
   /// Kill the dst explicitly
@@ -114,6 +109,7 @@ public:
     std::fill(destination_store.begin(), destination_store.end(), false);
   }
 
+  // Write an array_family object to a TIFF file
   template <typename IMSRC>
   void write_array(const char* filename, IMSRC image) {
     // benchmark::ClobberMemory();
@@ -143,6 +139,7 @@ public:
   af::shared<T> image_store;
   af::shared<bool> mask_store;
   af::shared<double> gain_store;
+  af::shared<bool> prefound_store;  // For checking results
   //   std::vector<char> sat_store;
 
   af::const_ref<T, af::c_grid<2>> src;
