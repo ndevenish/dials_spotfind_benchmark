@@ -51,12 +51,13 @@ add_custom_command(OUTPUT dispersion.o
 
 add_subdirectory(fast_hdf5_eiger_read)
 
+add_library(tinytiff STATIC TinyTIFF/tinytiffwriter.cpp TinyTIFF/tinytiffreader.cpp)
 
 add_executable(spotfind_test spotfind_test.cxx dispersion.o)
-target_link_libraries(spotfind_test PUBLIC Dials::Dials gtest_main)
+target_link_libraries(spotfind_test PUBLIC Dials::Dials gtest_main tinytiff)
 
 add_executable(spotfind_bm spotfind_bm.cxx dispersion.o)
-target_link_libraries(spotfind_bm PUBLIC Dials::Dials benchmark::benchmark)
+target_link_libraries(spotfind_bm PUBLIC Dials::Dials benchmark::benchmark tinytiff)
 
 # add_executable(sat sat/sat_main.cxx sat/sat_refactor.cxx sat/sat_original.cxx
 #               sat/sat_vector.cxx)
