@@ -17,7 +17,7 @@ find_package(benchmark REQUIRED)
 set(EIGEN_ROOT ${DIALS_BUILD}/../modules/eigen)
 find_package(Eigen3 REQUIRED)
 
-add_subdirectory(googletest)
+add_subdirectory(external/googletest)
 
 
 
@@ -49,9 +49,8 @@ add_custom_command(OUTPUT dispersion.o
                    COMMAND ispc ${CMAKE_SOURCE_DIR}/dispersion.ispc -o dispersion.o
                    DEPENDS dispersion.ispc)
 
-add_subdirectory(fast_hdf5_eiger_read)
-
-add_library(tinytiff STATIC TinyTIFF/tinytiffwriter.cpp TinyTIFF/tinytiffreader.cpp)
+add_subdirectory(external)
+# add_subdirectory(fast_hdf5_eiger_read)
 
 add_executable(spotfind_test spotfind_test.cxx dispersion.o)
 target_link_libraries(spotfind_test PUBLIC Dials::Dials gtest_main tinytiff)
