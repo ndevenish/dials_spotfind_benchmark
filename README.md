@@ -27,6 +27,9 @@ make
 The variable `DIALS_BUILD` should point to the `build/` folder from your
 libtbx/dials development environment.
 
+If you are on a linux machine with VTune, then set the location with
+`-DVTUNE_ROOT=<path_to_vtune_root>` to build in ITT labelling support.
+
 This should build a `spotfind_bm` and a `spotfind_test` file in the build
 folder. These can be run as usual (`--help` for running options).
 
