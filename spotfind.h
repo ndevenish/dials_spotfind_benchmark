@@ -39,8 +39,8 @@ public:
                                           af::c_grid<2>(IMAGE_W, IMAGE_H));
     mask = af::const_ref<bool, af::c_grid<2>>(mask_store.begin(),
                                               af::c_grid<2>(IMAGE_W, IMAGE_H));
-    gain = af::const_ref<T, af::c_grid<2>>(gain_store.begin(),
-                                           af::c_grid<2>(IMAGE_W, IMAGE_H));
+    gain = af::const_ref<double, af::c_grid<2>>(gain_store.begin(),
+                                                af::c_grid<2>(IMAGE_W, IMAGE_H));
     dst = af::ref<bool, af::c_grid<2>>(destination_store.begin(),
                                        af::c_grid<2>(IMAGE_W, IMAGE_H));
 
