@@ -10,7 +10,7 @@ Requires:
 Optionally supported:
   - Intel ITT for VTune instrumentation
 
-## Build
+## Build
 
 Check out with `git clone <url> --recursive`. This may give errors because
 TinyTIFF seems to have a subrepo error, but it works without this. Then
