@@ -17,8 +17,6 @@ find_package(benchmark REQUIRED)
 set(EIGEN_ROOT ${DIALS_BUILD}/../modules/eigen)
 find_package(Eigen3 REQUIRED)
 
-add_subdirectory(external/googletest)
-
 
 
 
