@@ -34,5 +34,29 @@ TEST(Existing, DispersionGain) {
 }
 
 TEST(ISPC, Initial) {
-  ImageSource<double> src;
+  ImageSource<float, float> src;
+  ispc::dispersion_threshold(&src.src.front(),
+                             &src.mask.front(),
+                             &src.gain.front(),
+                             &src.dst.front(),
+                             IMAGE_W,
+                             IMAGE_H,
+                             kernel_size_[0],
+                             kernel_size_[1],
+                             nsig_s_,
+                             nsig_b_,
+                             threshold_,
+                             min_count_);
+  src.write_array("ispc.tiff", src.dst);
+  ASSERT_TRUE(src.validate_dst(src.dst));
+  // uniform const float_t src[],
+  //   uniform const bool mask[],
+  //   uniform const float_t gain[],
+  //   uniform bool dst[],
+  //   uniform int width, uniform int height,
+  //   uniform int kernel_xsize, uniform int kernel_ysize,
+  //   uniform float sigma_s, uniform float sigma_b,
+  //   uniform float threshold,
+  //   uniform int min_count)
+  //
 }
