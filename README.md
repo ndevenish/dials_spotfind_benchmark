@@ -7,6 +7,7 @@ Requires:
   - CMake
   - Google Benchmark
   - ispc present (currently required)
+
 Optionally supported:
   - Intel ITT for VTune instrumentation
 
