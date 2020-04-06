@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
+
+cmake_policy(SET CMP0074 OLD) # XXX_ROOT
+
 project(spotfind_tests)
 # Boost imported target and cmake_parse_arguments were added in 3.5
 # 3.8 added interface targets to OpenGL
@@ -18,8 +21,22 @@ set(EIGEN_ROOT ${DIALS_BUILD}/../modules/eigen)
 find_package(Eigen3 REQUIRED)
 
 
+# Look for ITT/the variable VTUNE_ROOT specified
+if (VTUNE_ROOT AND NOT TARGET itt)
+    # message(STATUS "Found itt: ${VTUNE_ROOT}")
+    add_library(itt INTERFACE IMPORTED)
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+        set( _vtune_arch "64" )
+    else()
+        set( _vtune_arch "32" )
+    endif()
 
-
+    set_target_properties(itt PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${VTUNE_ROOT}/include"
+        INTERFACE_COMPILE_DEFINITIONS "HAS_ITT"
+        INTERFACE_LINK_LIBRARIES      "${VTUNE_ROOT}/lib${_vtune_arch}/libittnotify.a"
+    )
+endif()
 
 
 # if (USE_OPENMP)
@@ -55,6 +72,10 @@ target_link_libraries(spotfind_test PUBLIC Dials::Dials gtest_main tinytiff)
 
 add_executable(spotfind_bm spotfind_bm.cxx dispersion.o)
 target_link_libraries(spotfind_bm PUBLIC Dials::Dials benchmark::benchmark tinytiff)
+# Optionally include itt
+if (TARGET itt)
+    target_link_libraries(spotfind_bm PRIVATE itt)
+endif()
 
 # add_executable(sat sat/sat_main.cxx sat/sat_refactor.cxx sat/sat_original.cxx
 #               sat/sat_vector.cxx)
