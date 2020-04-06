@@ -4,3 +4,4 @@
 [submodule "external/TinyTIFF"]
 	path = external/TinyTIFF
 	url = https://github.com/jkriege2/TinyTIFF.git
+    ignore = dirty
