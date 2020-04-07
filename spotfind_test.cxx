@@ -35,6 +35,9 @@ TEST(Existing, DispersionGain) {
 
 TEST(ISPC, Initial) {
   ImageSource<float, float> src;
+  // cout << src.sat_store.size() << endl;
+  cout << src.src(0, 0) << endl;
+
   ispc::dispersion_threshold(&src.src.front(),
                              &src.mask.front(),
                              &src.gain.front(),
@@ -47,7 +50,10 @@ TEST(ISPC, Initial) {
                              nsig_b_,
                              threshold_,
                              min_count_);
+  //  reinterpret_cast<ispc::Data*>(&src.sat_store.front()));
+
   src.write_array("ispc.tiff", src.dst);
+
   ASSERT_TRUE(src.validate_dst(src.dst));
   // uniform const float_t src[],
   //   uniform const bool mask[],

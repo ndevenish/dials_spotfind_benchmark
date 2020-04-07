@@ -44,6 +44,10 @@ public:
     dst = af::ref<bool, af::c_grid<2>>(destination_store.begin(),
                                        af::c_grid<2>(IMAGE_W, IMAGE_H));
 
+    // Make an SAT store
+    // sat_store.resize(IMAGE_W * IMAGE_H *
+    // sizeof(dials::algorithms::DispersionThreshold::Data<double>));
+
     // Don't mask everything
     std::fill(mask_store.begin(), mask_store.end(), true);
     // Gain of 1
@@ -74,6 +78,12 @@ public:
       }
     }
 
+    // for (int y = 0; y < IMAGE_H; y += 1) {
+    //   for (int x = 0; x < IMAGE_W; x += 1) {
+    //     writable_src(y,x) = 1;
+    //   }
+    // }
+
     // int n = 0;
     // long sum = 0;
     // long sumsq = 0;
@@ -84,8 +94,8 @@ public:
     //     sumsq += src(y,x)*src(y,x);
     //   }
     // }
-    std::cout << "Diagnostics:\n  n:    " << n << "\n  sum:   " << sum
-              << "\n  sumsq: " << sumsq << std::endl;
+    // std::cout << "Diagnostics:\n  n:    " << n << "\n  sum:   " << sum
+    //           << "\n  sumsq: " << sumsq << std::endl;
 
     // Run spotfinding to have a "precalculated" result to validate against
     auto prefdst = af::ref<bool, af::c_grid<2>>(prefound_store.begin(),
@@ -93,6 +103,7 @@ public:
     auto algo = dials::algorithms::DispersionThreshold(
       image_size_, kernel_size_, nsig_b_, nsig_s_, threshold_, min_count_);
     algo.threshold(src, mask, prefdst);
+    write_array("dispersion.tif", prefdst);
 
     // std::cout << "Pixels: " << count << std::endl;
     // BOOST_ASSERT(count == 9216);
@@ -153,7 +164,7 @@ public:
   af::shared<bool> mask_store;
   af::shared<GAIN_T> gain_store;
   af::shared<bool> prefound_store;  // For checking results
-  //   std::vector<char> sat_store;
+  // std::vector<unsigned char> sat_store;
 
   af::const_ref<T, af::c_grid<2>> src;
   af::const_ref<bool, af::c_grid<2>> mask;
