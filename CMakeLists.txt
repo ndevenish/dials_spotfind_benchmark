@@ -72,8 +72,9 @@ target_link_libraries(spotfind_test PUBLIC Dials::Dials gtest_main tinytiff)
 target_include_directories(spotfind_test PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(spotfind_bm spotfind_bm.cxx dispersion.o)
-target_include_directories(spotfind_bm PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(spotfind_bm PUBLIC Dials::Dials benchmark::benchmark tinytiff)
+target_include_directories(spotfind_bm PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
 # Optionally include itt
 if (TARGET itt)
     target_link_libraries(spotfind_bm PRIVATE itt)

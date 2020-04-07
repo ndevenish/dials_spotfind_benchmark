@@ -1,6 +1,7 @@
 #include <benchmark/benchmark.h>
 
 #include "dials/algorithms/image/threshold/local.h"
+#include "dispersion.h"
 #include "itt.h"
 #include "spotfind.h"
 
@@ -56,5 +57,37 @@ static void BM_extended_dispersion_gain(benchmark::State& state) {
   }
 }
 BENCHMARK_TEMPLATE(BM_extended_dispersion_gain, double)->Unit(benchmark::kMillisecond);
+
+static void BM_ISPC(benchmark::State& state) {
+  ImageSource<float, float> src;
+
+  // Convert mask, dst to int because of https://github.com/ispc/ispc/issues/1709
+  std::unique_ptr<int[]> mask(new int[IMAGE_W * IMAGE_H]);
+  std::uninitialized_copy(src.mask.begin(), src.mask.end(), &mask[0]);
+  std::unique_ptr<int[]> dst(new int[IMAGE_W * IMAGE_H]);
+  std::uninitialized_copy(src.dst.begin(), src.dst.end(), &dst[0]);
+
+  for (auto _ : state) {
+    ispc::dispersion_threshold(&src.src.front(),
+                               mask.get(),
+                               &src.gain.front(),
+                               dst.get(),
+                               IMAGE_W,
+                               IMAGE_H,
+                               kernel_size_[0],
+                               kernel_size_[1],
+                               nsig_s_,
+                               nsig_b_,
+                               threshold_,
+                               min_count_);
+  }
+  // Copy the result back
+  for (int i = 0; i < IMAGE_H * IMAGE_W; ++i) {
+    src.dst[i] = dst[i];
+  }
+  // src.write_array("dispersion.tif", src.pre)
+  src.write_array("ispc.tif", src.dst);
+}
+BENCHMARK(BM_ISPC)->Unit(benchmark::kMillisecond);
 
 BENCHMARK_MAIN();

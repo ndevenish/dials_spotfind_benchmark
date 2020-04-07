@@ -41,9 +41,6 @@ void compute_sat(uniform int width,
         sum += src[idx];
         sumsq += src[idx] * src[idx];
       }
-      if (idx == 4000) {
-        print("4000");
-      }
       if (y == 0) {
         table[idx].N = N;
         table[idx].sum = sum;
@@ -85,10 +82,7 @@ export void dispersion_threshold(uniform const float_t *uniform src,
                                  uniform int min_count) {
   uniform Data *uniform table = uniform new Data[width * height];
 
-  print("Computing SAT");
-
   compute_sat(width, height, src, mask, table);
-  print("Calculating Thresholding");
 
   foreach (y = 0 ... height, x = 0 ... width) {
     // Get the left, right, top, bottom of the kernel window
