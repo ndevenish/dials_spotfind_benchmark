@@ -27,7 +27,7 @@ struct Data operator-(struct Data a, struct Data b) {
 void compute_sat(uniform int width,
                  uniform int height,
                  const uniform float_t src[],
-                 const uniform bool mask[],
+                 const uniform int mask[],
                  uniform Data table[]) {
   uniform const float_t BIG = (1 << 24);
   // idx is the global "current index"
@@ -57,10 +57,24 @@ void compute_sat(uniform int width,
   }
 }
 
+// export void compute_threshold(uniform const float_t *uniform src,
+//                                  uniform const bool *uniform mask,
+//                                  uniform int width,
+//                                  uniform int height,
+//                                  uniform int kernel_xsize,
+//                                  uniform int kernel_ysize,
+//                                  uniform float sigma_s,
+//                                  uniform float sigma_b,
+//                                  uniform float threshold,
+//                                  uniform int min_count)
+// {
+
+// }
+
 export void dispersion_threshold(uniform const float_t *uniform src,
-                                 uniform const bool *uniform mask,
+                                 uniform const int *uniform mask,
                                  uniform const float_t *uniform gain,
-                                 uniform bool *uniform dst,
+                                 uniform int *uniform dst,
                                  uniform int width,
                                  uniform int height,
                                  uniform int kernel_xsize,
@@ -78,8 +92,13 @@ export void dispersion_threshold(uniform const float_t *uniform src,
   compute_sat(width, height, src, mask, table);
   print("Calculating Thresholding");
 
-  foreach (y = 0 ... height, x = 0 ... width) {
-    //   print("% %", x, y);
+  foreach (y = 0 ... height, x = 0 ... width)
+  // int x = 2608;
+  // int y = 1441;
+  {
+    if (x == 2608 && y == 1441) {
+      print("Bad point");
+    }
     // Get the left, right, top, bottom of the kernel window
     int left = x - kernel_xsize - 1;
     int right = min(width - 1, x + kernel_xsize);
@@ -93,7 +112,13 @@ export void dispersion_threshold(uniform const float_t *uniform src,
       Data data_tr = table[top * width + right];
       Data data_bl = table[bottom * width + left];
 
-      area = data_br - data_bl - data_tr + data_tl;
+      // area = data_br - data_bl - data_tr + data_tl;
+
+      // Slightly unnatural and wrong(ish) way to do this - can blow out
+      // the top of the float range. It's the same way as the original
+      // dispersion though, which makes comparisons easier in float.
+      area = data_br - (data_bl + data_tr) + data_tl;
+      // print("Area");
     } else if (left >= 0) {
       Data data_bl = table[bottom * width + left];
       area = data_br - data_bl;
@@ -104,43 +129,17 @@ export void dispersion_threshold(uniform const float_t *uniform src,
       area = data_br;
     }
 
-    // int left = max(0, x - kernel_xsize - 1);
-    // int right = min(width - 1, x + kernel_xsize);
-    // int top = max(0, y - kernel_ysize - 1);
-    // int bottom = min(height - 1, y + kernel_ysize);
-    // Data data_tl = table[top * width + left];
-    // Data data_tr = table[top * width + right];
-    // Data data_bl = table[bottom * width + left];
-    // Data data_br = table[bottom * width + right];
-
-    // Data area = data_br - data_bl - data_tr + data_tl;
-
     int idx = y * width + x;
-    // do the thresholding calculations
-    float source = src[idx];
-    // bool masks = (src[idx] > threshold);
-    // // masks = masks && (src[idx] > threshold);
-    // // masks = mask[idx];
-    // // masks = masks && (area.N >= min_count);
-    // // masks = masks && (area.sum >= 0);
-    // // bool mask2 = src[idx] > threshold;
-    // masks = masks && (src[idx] > threshold);
-    // masks = masks && src[idx] > threshold;
-    bool mask3 = source > threshold;
-    bool mask_status = mask[idx] && area.N >= min_count && area.sum >= 0 && mask3;
 
-    if (mask_status) {
+    if (mask[idx] && area.N >= min_count && area.sum >= 0 && src[idx] > threshold) {
       double a = area.N * area.sumsq - area.sum * area.sum;
       double b = area.N * src[idx] - area.sum;
       double c =
         gain[idx] * area.sum * (area.N - 1 + sigma_b * sqrt((float)(2 * (area.N - 1))));
       double d = sigma_s * sqrt(gain[idx] * area.sum * area.N);
-      bool above_back = a > c;
-      bool above_strong = b > d;
-      print("%s", above_back);
-      print("%s", above_strong);
-      dst[idx] = above_back && above_strong;
-      dst[idx] = true;
+      // bool above_back = a > c;
+      // bool above_strong = b > d;
+      dst[idx] = a > c && b > d;
     } else {
       dst[idx] = false;
     }

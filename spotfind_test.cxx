@@ -38,10 +38,16 @@ TEST(ISPC, Initial) {
   // cout << src.sat_store.size() << endl;
   cout << src.src(0, 0) << endl;
 
+  // Convert mask, dst to int because of https://github.com/ispc/ispc/issues/1709
+  std::unique_ptr<int[]> mask(new int[IMAGE_W * IMAGE_H]);
+  std::uninitialized_copy(src.mask.begin(), src.mask.end(), &mask[0]);
+  std::unique_ptr<int[]> dst(new int[IMAGE_W * IMAGE_H]);
+  std::uninitialized_copy(src.dst.begin(), src.dst.end(), &dst[0]);
+
   ispc::dispersion_threshold(&src.src.front(),
-                             &src.mask.front(),
+                             mask.get(),
                              &src.gain.front(),
-                             &src.dst.front(),
+                             dst.get(),
                              IMAGE_W,
                              IMAGE_H,
                              kernel_size_[0],
@@ -52,7 +58,12 @@ TEST(ISPC, Initial) {
                              min_count_);
   //  reinterpret_cast<ispc::Data*>(&src.sat_store.front()));
 
-  src.write_array("ispc.tiff", src.dst);
+  // std::copy(dst.get(), dst.get()[IMAGE_H*IMAGE_W], src.dst.begin());
+  for (int i = 0; i < IMAGE_H * IMAGE_W; ++i) {
+    src.dst[i] = dst[i];
+  }
+  // src.write_array("dispersion.tif", src.pre)
+  src.write_array("ispc.tif", src.dst);
 
   ASSERT_TRUE(src.validate_dst(src.dst));
   // uniform const float_t src[],

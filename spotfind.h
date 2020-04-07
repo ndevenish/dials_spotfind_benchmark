@@ -102,7 +102,12 @@ public:
                                                 af::c_grid<2>(IMAGE_W, IMAGE_H));
     auto algo = dials::algorithms::DispersionThreshold(
       image_size_, kernel_size_, nsig_b_, nsig_s_, threshold_, min_count_);
-    algo.threshold(src, mask, prefdst);
+    // Convert internal gain to double for the function
+    af::shared<double> _pref_gain_store(IMAGE_W * IMAGE_H);
+    std::fill(_pref_gain_store.begin(), _pref_gain_store.end(), 1.0);
+    auto _pref_gain = af::const_ref<double, af::c_grid<2>>(
+      _pref_gain_store.begin(), af::c_grid<2>(IMAGE_W, IMAGE_H));
+    algo.threshold_w_gain(src, mask, _pref_gain, prefdst);
     write_array("dispersion.tif", prefdst);
 
     // std::cout << "Pixels: " << count << std::endl;
@@ -118,11 +123,16 @@ public:
                                                 af::c_grid<2>(IMAGE_W, IMAGE_H));
     if ((tocheck.accessor()[0] != prefdst.accessor()[0])
         && (tocheck.accessor()[1] != prefdst.accessor()[1])) {
+      std::cout << "Validation Failed: Size mismatch" << std::endl;
       return false;
     }
     for (int y = 0; y < IMAGE_H; y += 1) {
       for (int x = 0; x < IMAGE_W; x += 1) {
-        if (tocheck(y, x) != prefdst(y, x)) return false;
+        if (tocheck(y, x) != prefdst(y, x)) {
+          std::cout << "Validation Failed: " << x << ", " << y << " " << tocheck(y, x)
+                    << " instead of " << prefdst(y, x) << std::endl;
+          return false;
+        }
       }
     }
     return true;
@@ -148,6 +158,7 @@ public:
     TinyTIFFWriter_writeImage(tif, &img.front());
     TinyTIFFWriter_close(tif);
   }
+
   //   /// Called after processing, validates the result and calculates info
   //   void verify_results(benchmark::State &state) {
   //     // state.SetBytesProcessed(state.iterations() * sizeof(T) * IMAGE_W *
