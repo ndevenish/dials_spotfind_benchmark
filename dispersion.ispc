@@ -82,9 +82,7 @@ export void dispersion_threshold(uniform const float_t *uniform src,
                                  uniform float sigma_s,
                                  uniform float sigma_b,
                                  uniform float threshold,
-                                 uniform int min_count
-                                 //  uniform Data *uniform table
-) {
+                                 uniform int min_count) {
   uniform Data *uniform table = uniform new Data[width * height];
 
   print("Computing SAT");
