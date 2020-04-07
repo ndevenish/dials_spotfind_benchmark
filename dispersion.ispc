@@ -92,13 +92,7 @@ export void dispersion_threshold(uniform const float_t *uniform src,
   compute_sat(width, height, src, mask, table);
   print("Calculating Thresholding");
 
-  foreach (y = 0 ... height, x = 0 ... width)
-  // int x = 2608;
-  // int y = 1441;
-  {
-    if (x == 2608 && y == 1441) {
-      print("Bad point");
-    }
+  foreach (y = 0 ... height, x = 0 ... width) {
     // Get the left, right, top, bottom of the kernel window
     int left = x - kernel_xsize - 1;
     int right = min(width - 1, x + kernel_xsize);
@@ -112,13 +106,11 @@ export void dispersion_threshold(uniform const float_t *uniform src,
       Data data_tr = table[top * width + right];
       Data data_bl = table[bottom * width + left];
 
-      // area = data_br - data_bl - data_tr + data_tl;
-
       // Slightly unnatural and wrong(ish) way to do this - can blow out
       // the top of the float range. It's the same way as the original
       // dispersion though, which makes comparisons easier in float.
       area = data_br - (data_bl + data_tr) + data_tl;
-      // print("Area");
+      // area = data_br - data_bl - data_tr + data_tl;
     } else if (left >= 0) {
       Data data_bl = table[bottom * width + left];
       area = data_br - data_bl;

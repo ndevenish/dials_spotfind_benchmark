@@ -35,8 +35,6 @@ TEST(Existing, DispersionGain) {
 
 TEST(ISPC, Initial) {
   ImageSource<float, float> src;
-  // cout << src.sat_store.size() << endl;
-  cout << src.src(0, 0) << endl;
 
   // Convert mask, dst to int because of https://github.com/ispc/ispc/issues/1709
   std::unique_ptr<int[]> mask(new int[IMAGE_W * IMAGE_H]);
@@ -56,9 +54,7 @@ TEST(ISPC, Initial) {
                              nsig_b_,
                              threshold_,
                              min_count_);
-  //  reinterpret_cast<ispc::Data*>(&src.sat_store.front()));
-
-  // std::copy(dst.get(), dst.get()[IMAGE_H*IMAGE_W], src.dst.begin());
+  // Copy the result back
   for (int i = 0; i < IMAGE_H * IMAGE_W; ++i) {
     src.dst[i] = dst[i];
   }
@@ -66,14 +62,4 @@ TEST(ISPC, Initial) {
   src.write_array("ispc.tif", src.dst);
 
   ASSERT_TRUE(src.validate_dst(src.dst));
-  // uniform const float_t src[],
-  //   uniform const bool mask[],
-  //   uniform const float_t gain[],
-  //   uniform bool dst[],
-  //   uniform int width, uniform int height,
-  //   uniform int kernel_xsize, uniform int kernel_ysize,
-  //   uniform float sigma_s, uniform float sigma_b,
-  //   uniform float threshold,
-  //   uniform int min_count)
-  //
 }
