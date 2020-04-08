@@ -20,6 +20,14 @@ find_package(benchmark REQUIRED)
 set(EIGEN_ROOT ${DIALS_BUILD}/../modules/eigen)
 find_package(Eigen3 REQUIRED)
 
+if (NOT ISPC_EXECUTABLE)
+    find_program(ISPC_EXECUTABLE ispc DOC "ispc executable location")
+    if (NOT ISPC_EXECUTABLE)
+        message(SEND_ERROR "ispc compiler not found")
+    else()
+        message(STATUS "Found ispc: ${ISPC}")
+    endif()
+endif()
 
 # Look for ITT/the variable VTUNE_ROOT specified
 if (VTUNE_ROOT AND NOT TARGET itt)
@@ -61,7 +69,7 @@ endif()
 #		Dials::Dials benchmark::benchmark Eigen::Eigen)
 
 add_custom_command(OUTPUT dispersion.o dispersion.h
-                   COMMAND ispc -g ${CMAKE_SOURCE_DIR}/dispersion.ispc -o dispersion.o -h dispersion.h
+                   COMMAND ${ISPC_EXECUTABLE} -g ${CMAKE_SOURCE_DIR}/dispersion.ispc -o dispersion.o -h dispersion.h
                    DEPENDS dispersion.ispc)
 # --target=sse2-i32x8
 add_subdirectory(external)
