@@ -90,12 +90,15 @@ export void dispersion_threshold(uniform const float_t *uniform src,
 
   compute_sat(width, height, src, mask, table);
 
-  foreach (y = 0 ... height, x = 0 ... width) {
+  // Performance hack: Ignore a kernel_sized strip on the right and bottom
+  // This can be special cased later, but means that the compiler recognises
+  // the linear blocks of memory access and can avoid a gather instruction
+  foreach (y = 0 ... height - kernel_ysize, x = 0 ... width - kernel_xsize) {
     // Get the left, right, top, bottom of the kernel window
     int left = x - kernel_xsize - 1;
-    int right = min(width - 1, x + kernel_xsize);
+    int right = x + kernel_xsize;
     int top = y - kernel_ysize - 1;
-    int bottom = min(height - 1, y + kernel_ysize);
+    int bottom = y + kernel_ysize;
 
     int idx_br = bottom * width + right;
     int idx_tl = top * width + left;
