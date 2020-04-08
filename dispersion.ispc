@@ -140,5 +140,8 @@ export void dispersion_threshold(uniform const float_t *uniform src,
     }
   }
 
+  delete[] table.N;
+  delete[] table.sum;
+  delete[] table.sumsq;
   // delete[] table;
 }
