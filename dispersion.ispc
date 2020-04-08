@@ -2,25 +2,25 @@
 typedef float float_t;
 
 struct Data {
-  int N;
-  float sum;
-  float sumsq;
+  int *N;
+  float *sum;
+  float *sumsq;
 };
 
-struct Data operator+(struct Data a, struct Data b) {
-  struct Data result;
-  result.N = a.N + b.N;
-  result.sum = a.sum + b.sum;
-  result.sumsq = a.sumsq + b.sumsq;
-  return result;
-}
-struct Data operator-(struct Data a, struct Data b) {
-  struct Data result;
-  result.N = a.N - b.N;
-  result.sum = a.sum - b.sum;
-  result.sumsq = a.sumsq - b.sumsq;
-  return result;
-}
+// struct Data operator+(struct Data a, struct Data b) {
+//   struct Data result;
+//   result.N = a.N + b.N;
+//   result.sum = a.sum + b.sum;
+//   result.sumsq = a.sumsq + b.sumsq;
+//   return result;
+// }
+// struct Data operator-(struct Data a, struct Data b) {
+//   struct Data result;
+//   result.N = a.N - b.N;
+//   result.sum = a.sum - b.sum;
+//   result.sumsq = a.sumsq - b.sumsq;
+//   return result;
+// }
 
 // soa<8> Data
 
@@ -28,7 +28,7 @@ void compute_sat(uniform int width,
                  uniform int height,
                  const uniform float_t src[],
                  const uniform int mask[],
-                 uniform Data table[]) {
+                 uniform Data table) {
   uniform const float_t BIG = (1 << 24);
   // idx is the global "current index"
   for (uniform int y = 0, idx = 0; y < height; ++y) {
@@ -42,13 +42,13 @@ void compute_sat(uniform int width,
         sumsq += src[idx] * src[idx];
       }
       if (y == 0) {
-        table[idx].N = N;
-        table[idx].sum = sum;
-        table[idx].sumsq = sumsq;
+        table.N[idx] = N;
+        table.sum[idx] = sum;
+        table.sumsq[idx] = sumsq;
       } else {
-        table[idx].N = N + table[idx - width].N;
-        table[idx].sum = sum + table[idx - width].sum;
-        table[idx].sumsq = sumsq + table[idx - width].sumsq;
+        table.N[idx] = N + table.N[idx - width];
+        table.sum[idx] = sum + table.sum[idx - width];
+        table.sumsq[idx] = sumsq + table.sumsq[idx - width];
       }
     }
   }
@@ -80,7 +80,12 @@ export void dispersion_threshold(uniform const float_t *uniform src,
                                  uniform float sigma_b,
                                  uniform float threshold,
                                  uniform int min_count) {
-  uniform Data *uniform table = uniform new Data[width * height];
+  // uniform Data *uniform table = uniform new Data[width * height];
+  // soa<8> Data *uniform table = uniform new soa<8> Data[width * height];
+  uniform Data table;
+  table.N = uniform new int[width * height];
+  table.sum = uniform new float_t[width * height];
+  table.sumsq = uniform new float_t[width * height];
 
   compute_sat(width, height, src, mask, table);
 
@@ -91,36 +96,42 @@ export void dispersion_threshold(uniform const float_t *uniform src,
     int top = y - kernel_ysize - 1;
     int bottom = min(height - 1, y + kernel_ysize);
 
-    Data data_br = table[bottom * width + right];
-    Data area;
-    if (left >= 0 && top >= 0) {
-      Data data_tl = table[top * width + left];
-      Data data_tr = table[top * width + right];
-      Data data_bl = table[bottom * width + left];
+    int idx_br = bottom * width + right;
+    int idx_tl = top * width + left;
+    int idx_tr = top * width + right;
+    int idx_bl = bottom * width + left;
 
+    int N = table.N[idx_br];
+    int sum = table.sum[idx_br];
+    int sumsq = table.sumsq[idx_br];
+
+    if (left >= 0 && top >= 0) {
       // Slightly unnatural and wrong(ish) way to do this - can blow out
       // the top of the float range. It's the same way as the original
       // dispersion though, which makes comparisons easier in float.
-      area = data_br - (data_bl + data_tr) + data_tl;
+      // area = data_br - (data_bl + data_tr) + data_tl;
+      N = N - (table.N[idx_bl] + table.N[idx_tr]) + table.N[idx_tl];
+      sum = sum - (table.sum[idx_bl] + table.sum[idx_tr]) + table.sum[idx_tl];
+      sumsq = sumsq - (table.sumsq[idx_bl] + table.sumsq[idx_tr]) + table.sumsq[idx_tl];
       // area = data_br - data_bl - data_tr + data_tl;
     } else if (left >= 0) {
-      Data data_bl = table[bottom * width + left];
-      area = data_br - data_bl;
+      // area = data_br - data_bl;
+      N = N - table.N[idx_bl];
+      sum = sum - table.sum[idx_bl];
+      sumsq = sumsq - table.sumsq[idx_bl];
     } else if (top >= 0) {
-      Data data_tr = table[top * width + right];
-      area = data_br - data_tr;
-    } else {
-      area = data_br;
+      N = N - table.N[idx_tr];
+      sum = sum - table.sum[idx_tr];
+      sumsq = sumsq - table.sumsq[idx_tr];
     }
 
     int idx = y * width + x;
 
-    if (mask[idx] && area.N >= min_count && area.sum >= 0 && src[idx] > threshold) {
-      double a = area.N * area.sumsq - area.sum * area.sum;
-      double b = area.N * src[idx] - area.sum;
-      double c =
-        gain[idx] * area.sum * (area.N - 1 + sigma_b * sqrt((float)(2 * (area.N - 1))));
-      double d = sigma_s * sqrt(gain[idx] * area.sum * area.N);
+    if (mask[idx] && N >= min_count && sum >= 0 && src[idx] > threshold) {
+      double a = N * sumsq - sum * sum;
+      double b = N * src[idx] - sum;
+      double c = gain[idx] * sum * (N - 1 + sigma_b * sqrt((float)(2 * (N - 1))));
+      double d = sigma_s * sqrt(gain[idx] * sum * N);
       // bool above_back = a > c;
       // bool above_strong = b > d;
       dst[idx] = a > c && b > d;
@@ -129,5 +140,5 @@ export void dispersion_threshold(uniform const float_t *uniform src,
     }
   }
 
-  delete[] table;
+  // delete[] table;
 }
