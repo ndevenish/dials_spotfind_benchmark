@@ -31,15 +31,25 @@ void __itt_task_end(const __itt_domain *domain) {}
 
 class BeginTask {
   __itt_domain* domain;
+  bool inTask;
 
 public:
-  BeginTask(std::string domain_name, std::string name) {
+  BeginTask(std::string domain_name, std::string name) : inTask(true) {
     domain = __itt_domain_create(domain_name.c_str());
     __itt_string_handle* handle_main = __itt_string_handle_create(name.c_str());
     __itt_task_begin(domain, __itt_null, __itt_null, handle_main);
   }
+
+  void end() {
+    if (inTask) {
+      __itt_task_end(domain);
+    }
+  }
+
   ~BeginTask() {
-    __itt_task_end(domain);
+    if (inTask) {
+      __itt_task_end(domain);
+    }
     domain = nullptr;
   }
 };

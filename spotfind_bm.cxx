@@ -67,6 +67,7 @@ static void BM_ISPC(benchmark::State& state) {
   std::unique_ptr<int[]> dst(new int[IMAGE_W * IMAGE_H]);
   std::uninitialized_copy(src.dst.begin(), src.dst.end(), &dst[0]);
 
+  BeginTask task("dials.dispersion.benchmark", "initial_ispc");
   for (auto _ : state) {
     ispc::dispersion_threshold(&src.src.front(),
                                mask.get(),
@@ -81,6 +82,7 @@ static void BM_ISPC(benchmark::State& state) {
                                threshold_,
                                min_count_);
   }
+  task.end();
   // Copy the result back
   for (int i = 0; i < IMAGE_H * IMAGE_W; ++i) {
     src.dst[i] = dst[i];
