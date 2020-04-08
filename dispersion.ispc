@@ -93,7 +93,8 @@ export void dispersion_threshold(uniform const float_t *uniform src,
   // Performance hack: Ignore a kernel_sized strip on the right and bottom
   // This can be special cased later, but means that the compiler recognises
   // the linear blocks of memory access and can avoid a gather instruction
-  foreach (y = 0 ... height - kernel_ysize, x = 0 ... width - kernel_xsize) {
+  foreach (y = (kernel_ysize + 1)... height - kernel_ysize,
+           x = (kernel_xsize + 1)... width - kernel_xsize) {
     // Get the left, right, top, bottom of the kernel window
     int left = x - kernel_xsize - 1;
     int right = x + kernel_xsize;
@@ -109,25 +110,25 @@ export void dispersion_threshold(uniform const float_t *uniform src,
     int sum = table.sum[idx_br];
     int sumsq = table.sumsq[idx_br];
 
-    if (left >= 0 && top >= 0) {
-      // Slightly unnatural and wrong(ish) way to do this - can blow out
-      // the top of the float range. It's the same way as the original
-      // dispersion though, which makes comparisons easier in float.
-      // area = data_br - (data_bl + data_tr) + data_tl;
-      N = N - (table.N[idx_bl] + table.N[idx_tr]) + table.N[idx_tl];
-      sum = sum - (table.sum[idx_bl] + table.sum[idx_tr]) + table.sum[idx_tl];
-      sumsq = sumsq - (table.sumsq[idx_bl] + table.sumsq[idx_tr]) + table.sumsq[idx_tl];
-      // area = data_br - data_bl - data_tr + data_tl;
-    } else if (left >= 0) {
-      // area = data_br - data_bl;
-      N = N - table.N[idx_bl];
-      sum = sum - table.sum[idx_bl];
-      sumsq = sumsq - table.sumsq[idx_bl];
-    } else if (top >= 0) {
-      N = N - table.N[idx_tr];
-      sum = sum - table.sum[idx_tr];
-      sumsq = sumsq - table.sumsq[idx_tr];
-    }
+    // if (left >= 0 && top >= 0) {
+    // Slightly unnatural and wrong(ish) way to do this - can blow out
+    // the top of the float range. It's the same way as the original
+    // dispersion though, which makes comparisons easier in float.
+    // area = data_br - (data_bl + data_tr) + data_tl;
+    N = N - (table.N[idx_bl] + table.N[idx_tr]) + table.N[idx_tl];
+    sum = sum - (table.sum[idx_bl] + table.sum[idx_tr]) + table.sum[idx_tl];
+    sumsq = sumsq - (table.sumsq[idx_bl] + table.sumsq[idx_tr]) + table.sumsq[idx_tl];
+    // area = data_br - data_bl - data_tr + data_tl;
+    // } else if (left >= 0) {
+    //   // area = data_br - data_bl;
+    //   N = N - table.N[idx_bl];
+    //   sum = sum - table.sum[idx_bl];
+    //   sumsq = sumsq - table.sumsq[idx_bl];
+    // } else if (top >= 0) {
+    //   N = N - table.N[idx_tr];
+    //   sum = sum - table.sum[idx_tr];
+    //   sumsq = sumsq - table.sumsq[idx_tr];
+    // }
 
     int idx = y * width + x;
 
