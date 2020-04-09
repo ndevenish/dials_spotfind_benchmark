@@ -40,7 +40,7 @@ TEST(ISPC, Initial) {
   std::unique_ptr<int[]> mask(new int[IMAGE_W * IMAGE_H]);
   std::uninitialized_copy(src.mask.begin(), src.mask.end(), &mask[0]);
   std::unique_ptr<int[]> dst(new int[IMAGE_W * IMAGE_H]);
-  std::uninitialized_copy(src.dst.begin(), src.dst.end(), &dst[0]);
+  std::fill(&dst[0], dst.get() + (IMAGE_W * IMAGE_H), 0);
 
   ispc::dispersion_threshold(&src.src.front(),
                              mask.get(),
