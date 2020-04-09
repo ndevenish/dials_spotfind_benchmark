@@ -135,6 +135,33 @@ export void dispersion_threshold(uniform const float_input_t *uniform src,
       double d = sigma_s * sqrt(gain[idx] * sum * N);
       // bool above_back = a > c;
       // bool above_strong = b > d;
+#if DEBUG
+      if (x == 2828 && y == 1625) {
+        print("Debug DISPERSION x = %, y = %\n", x, y);
+        print("top: %\n", top);
+        print("left: %\n", left);
+        print("bottom: %\n", bottom);
+        print("right: %\n", right);
+        print("area N:  %\n     sum:   %\n     sumsq:  %\n", N, sum, sumsq);
+        print("tl N:  %\n     sum:   %\n     sumsq:  %\n",
+              table.N[idx_tl],
+              table.sum[idx_tl],
+              table.sumsq[idx_tl]);
+        print("tr N:  %\n     sum:   %\n     sumsq:  %\n",
+              table.N[idx_tr],
+              table.sum[idx_tr],
+              table.sumsq[idx_tr]);
+        print("bl N:  %\n     sum:   %\n     sumsq:  %\n",
+              table.N[idx_bl],
+              table.sum[idx_bl],
+              table.sumsq[idx_bl]);
+        print("br N:  %\n     sum:   %\n     sumsq:  %\n",
+              table.N[idx_br],
+              table.sum[idx_br],
+              table.sumsq[idx_br]);
+        print("Result:\n a > c   %5.4f > %5.4f\n b > c   %5.4f > %5.4f\n", a, c, b, d);
+      }
+#endif
       dst[idx] = a > c && b > d;
     } else {
       dst[idx] = false;
