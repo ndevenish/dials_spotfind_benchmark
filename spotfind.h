@@ -24,6 +24,14 @@ const double threshold_ = 0.0;
 const double nsig_b_ = 6.0;
 const double nsig_s_ = 3.0;
 
+struct SATData {
+  int N;
+  double sum;
+  double sumsq;
+
+  SATData(int N, double sum, double sumsq) : N(N), sum(sum), sumsq(sumsq) {}
+};
+
 /// Class to generate sample image data
 template <typename T, typename GAIN_T = double>
 class ImageSource {
@@ -107,11 +115,19 @@ public:
     std::fill(_pref_gain_store.begin(), _pref_gain_store.end(), 1.0);
     auto _pref_gain = af::const_ref<double, af::c_grid<2>>(
       _pref_gain_store.begin(), af::c_grid<2>(IMAGE_W, IMAGE_H));
-    algo.threshold_w_gain(src, mask, _pref_gain, prefdst);
-    write_array("dispersion.tif", prefdst);
 
-    // std::cout << "Pixels: " << count << std::endl;
-    // BOOST_ASSERT(count == 9216);
+    algo.threshold_w_gain(src, mask, _pref_gain, prefdst);
+
+    // Save the SAT table for diagnostics
+    prefound_SAT.reserve(IMAGE_W * IMAGE_H);
+    dials::algorithms::DispersionThreshold::Data<double>* sat =
+      reinterpret_cast<dials::algorithms::DispersionThreshold::Data<double>*>(
+        &algo.buffer_.front());
+    for (int i = 0; i < (IMAGE_W * IMAGE_H); ++i) {
+      prefound_SAT.emplace_back(SATData(sat[i].m, sat[i].x, sat[i].y));
+    }
+
+    write_array("dispersion.tif", prefdst);
 #ifdef BENCHMARK
     // If doing a benchmark, make sure to avoid inlining issues
     benchmark::ClobberMemory();
@@ -184,6 +200,7 @@ public:
   af::shared<bool> mask_store;
   af::shared<GAIN_T> gain_store;
   af::shared<bool> prefound_store;  // For checking results
+  std::vector<SATData> prefound_SAT;
   // std::vector<unsigned char> sat_store;
 
   af::const_ref<T, af::c_grid<2>> src;
