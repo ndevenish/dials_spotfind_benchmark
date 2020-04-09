@@ -83,6 +83,7 @@ export void dispersion_threshold(uniform const float_t *uniform src,
   // uniform Data *uniform table = uniform new Data[width * height];
   // soa<8> Data *uniform table = uniform new soa<8> Data[width * height];
   uniform Data table;
+  // Dedicated AOS layout
   table.N = uniform new int[width * height];
   table.sum = uniform new float_t[width * height];
   table.sumsq = uniform new float_t[width * height];
