@@ -56,7 +56,8 @@ TEST(ISPC, Initial) {
                              nsig_s_,
                              nsig_b_,
                              threshold_,
-                             min_count_);
+                             min_count_,
+                             &SAT.front());
   // Copy the result back
   for (int i = 0; i < IMAGE_H * IMAGE_W; ++i) {
     src.dst[i] = dst[i];

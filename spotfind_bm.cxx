@@ -80,7 +80,8 @@ static void BM_ISPC(benchmark::State& state) {
                                nsig_s_,
                                nsig_b_,
                                threshold_,
-                               min_count_);
+                               min_count_,
+                               0);
   }
   task.end();
   // Copy the result back
