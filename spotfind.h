@@ -126,16 +126,20 @@ public:
       std::cout << "Validation Failed: Size mismatch" << std::endl;
       return false;
     }
+    int fail_count = 0;
     for (int y = 0; y < IMAGE_H; y += 1) {
       for (int x = 0; x < IMAGE_W; x += 1) {
         if (tocheck(y, x) != prefdst(y, x)) {
           std::cout << "Validation Failed: " << x << ", " << y << " " << tocheck(y, x)
                     << " instead of " << prefdst(y, x) << std::endl;
-          return false;
+          fail_count += 1;
         }
       }
     }
-    return true;
+    if (fail_count) {
+      std::cout << "Total mismatches: " << fail_count << std::endl;
+    }
+    return fail_count == 0;
   }
 
   /// Kill the dst explicitly
