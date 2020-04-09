@@ -1,10 +1,10 @@
-// #define float_t float
-typedef float float_t;
+typedef double float_t;
+typedef float float_input_t;
 
 struct Data {
   int *N;
-  float *sum;
-  float *sumsq;
+  float_t *sum;
+  float_t *sumsq;
 };
 
 // struct Data operator+(struct Data a, struct Data b) {
@@ -26,7 +26,7 @@ struct Data {
 
 void compute_sat(uniform int width,
                  uniform int height,
-                 const uniform float_t src[],
+                 const uniform float_input_t src[],
                  const uniform int mask[],
                  uniform Data table) {
   uniform const float_t BIG = (1 << 24);
@@ -68,9 +68,9 @@ void compute_sat(uniform int width,
 
 // }
 
-export void dispersion_threshold(uniform const float_t *uniform src,
+export void dispersion_threshold(uniform const float_input_t *uniform src,
                                  uniform const int *uniform mask,
-                                 uniform const float_t *uniform gain,
+                                 uniform const float *uniform gain,
                                  uniform int *uniform dst,
                                  uniform int width,
                                  uniform int height,
