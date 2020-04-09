@@ -130,9 +130,14 @@ public:
     for (int y = 0; y < IMAGE_H; y += 1) {
       for (int x = 0; x < IMAGE_W; x += 1) {
         if (tocheck(y, x) != prefdst(y, x)) {
-          std::cout << "Validation Failed: " << x << ", " << y << " " << tocheck(y, x)
-                    << " instead of " << prefdst(y, x) << std::endl;
+          if (fail_count < 5) {
+            std::cout << "Validation Failed: " << x << ", " << y << " " << tocheck(y, x)
+                      << " instead of " << prefdst(y, x) << std::endl;
+          }
           fail_count += 1;
+          if (fail_count == 5) {
+            std::cout << "..." << std::endl;
+          }
         }
       }
     }
