@@ -1,28 +1,11 @@
-// #define float_t float
 typedef float float_t;
 
+// Convenience struct for storing arrays
 struct Data {
   int *N;
   float *sum;
   float *sumsq;
 };
-
-// struct Data operator+(struct Data a, struct Data b) {
-//   struct Data result;
-//   result.N = a.N + b.N;
-//   result.sum = a.sum + b.sum;
-//   result.sumsq = a.sumsq + b.sumsq;
-//   return result;
-// }
-// struct Data operator-(struct Data a, struct Data b) {
-//   struct Data result;
-//   result.N = a.N - b.N;
-//   result.sum = a.sum - b.sum;
-//   result.sumsq = a.sumsq - b.sumsq;
-//   return result;
-// }
-
-// soa<8> Data
 
 void compute_sat(uniform int width,
                  uniform int height,
@@ -54,20 +37,6 @@ void compute_sat(uniform int width,
   }
 }
 
-// export void compute_threshold(uniform const float_t *uniform src,
-//                                  uniform const bool *uniform mask,
-//                                  uniform int width,
-//                                  uniform int height,
-//                                  uniform int kernel_xsize,
-//                                  uniform int kernel_ysize,
-//                                  uniform float sigma_s,
-//                                  uniform float sigma_b,
-//                                  uniform float threshold,
-//                                  uniform int min_count)
-// {
-
-// }
-
 export void dispersion_threshold(uniform const float_t *uniform src,
                                  uniform const int *uniform mask,
                                  uniform const float_t *uniform gain,
@@ -80,9 +49,8 @@ export void dispersion_threshold(uniform const float_t *uniform src,
                                  uniform float sigma_b,
                                  uniform float threshold,
                                  uniform int min_count) {
-  // uniform Data *uniform table = uniform new Data[width * height];
-  // soa<8> Data *uniform table = uniform new soa<8> Data[width * height];
   uniform Data table;
+
   // Dedicated AOS layout
   table.N = uniform new int[width * height];
   table.sum = uniform new float_t[width * height];
@@ -90,9 +58,10 @@ export void dispersion_threshold(uniform const float_t *uniform src,
 
   compute_sat(width, height, src, mask, table);
 
-  // Performance hack: Ignore a kernel_sized strip on the right and bottom
+  // Performance hack: Ignore a kernel_sized strip on edges
   // This can be special cased later, but means that the compiler recognises
   // the linear blocks of memory access and can avoid a gather instruction
+  // - on the edges, some lanes have incoherent lookups
   foreach (y = (kernel_ysize + 1)... height - kernel_ysize,
            x = (kernel_xsize + 1)... width - kernel_xsize) {
     // Get the left, right, top, bottom of the kernel window
@@ -110,7 +79,6 @@ export void dispersion_threshold(uniform const float_t *uniform src,
     int sum = table.sum[idx_br];
     int sumsq = table.sumsq[idx_br];
 
-    // if (left >= 0 && top >= 0) {
     // Slightly unnatural and wrong(ish) way to do this - can blow out
     // the top of the float range. It's the same way as the original
     // dispersion though, which makes comparisons easier in float.
@@ -118,17 +86,6 @@ export void dispersion_threshold(uniform const float_t *uniform src,
     N = N - (table.N[idx_bl] + table.N[idx_tr]) + table.N[idx_tl];
     sum = sum - (table.sum[idx_bl] + table.sum[idx_tr]) + table.sum[idx_tl];
     sumsq = sumsq - (table.sumsq[idx_bl] + table.sumsq[idx_tr]) + table.sumsq[idx_tl];
-    // area = data_br - data_bl - data_tr + data_tl;
-    // } else if (left >= 0) {
-    //   // area = data_br - data_bl;
-    //   N = N - table.N[idx_bl];
-    //   sum = sum - table.sum[idx_bl];
-    //   sumsq = sumsq - table.sumsq[idx_bl];
-    // } else if (top >= 0) {
-    //   N = N - table.N[idx_tr];
-    //   sum = sum - table.sum[idx_tr];
-    //   sumsq = sumsq - table.sumsq[idx_tr];
-    // }
 
     int idx = y * width + x;
 
@@ -148,5 +105,4 @@ export void dispersion_threshold(uniform const float_t *uniform src,
   delete[] table.N;
   delete[] table.sum;
   delete[] table.sumsq;
-  // delete[] table;
 }
