@@ -7,23 +7,6 @@ struct Data {
   float_t *sumsq;
 };
 
-// struct Data operator+(struct Data a, struct Data b) {
-//   struct Data result;
-//   result.N = a.N + b.N;
-//   result.sum = a.sum + b.sum;
-//   result.sumsq = a.sumsq + b.sumsq;
-//   return result;
-// }
-// struct Data operator-(struct Data a, struct Data b) {
-//   struct Data result;
-//   result.N = a.N - b.N;
-//   result.sum = a.sum - b.sum;
-//   result.sumsq = a.sumsq - b.sumsq;
-//   return result;
-// }
-
-// soa<8> Data
-
 void compute_sat(uniform int width,
                  uniform int height,
                  const uniform float_input_t src[],
@@ -54,20 +37,6 @@ void compute_sat(uniform int width,
   }
 }
 
-// export void compute_threshold(uniform const float_t *uniform src,
-//                                  uniform const bool *uniform mask,
-//                                  uniform int width,
-//                                  uniform int height,
-//                                  uniform int kernel_xsize,
-//                                  uniform int kernel_ysize,
-//                                  uniform float sigma_s,
-//                                  uniform float sigma_b,
-//                                  uniform float threshold,
-//                                  uniform int min_count)
-// {
-
-// }
-
 export void dispersion_threshold(uniform const float_input_t *uniform src,
                                  uniform const int *uniform mask,
                                  uniform const float *uniform gain,
@@ -80,8 +49,6 @@ export void dispersion_threshold(uniform const float_input_t *uniform src,
                                  uniform float sigma_b,
                                  uniform float threshold,
                                  uniform int min_count) {
-  // uniform Data *uniform table = uniform new Data[width * height];
-  // soa<8> Data *uniform table = uniform new soa<8> Data[width * height];
   uniform Data table;
   // Dedicated AOS layout
   table.N = uniform new int[width * height];
@@ -171,5 +138,4 @@ export void dispersion_threshold(uniform const float_input_t *uniform src,
   delete[] table.N;
   delete[] table.sum;
   delete[] table.sumsq;
-  // delete[] table;
 }
