@@ -120,8 +120,8 @@ public:
 
     // Save the SAT table for diagnostics
     prefound_SAT.reserve(IMAGE_W * IMAGE_H);
-    dials::algorithms::DispersionThreshold::Data<double>* sat =
-      reinterpret_cast<dials::algorithms::DispersionThreshold::Data<double>*>(
+    dials::algorithms::DispersionThreshold::Data<T>* sat =
+      reinterpret_cast<dials::algorithms::DispersionThreshold::Data<T>*>(
         &algo.buffer_.front());
     for (int i = 0; i < (IMAGE_W * IMAGE_H); ++i) {
       prefound_SAT.emplace_back(SATData(sat[i].m, sat[i].x, sat[i].y));

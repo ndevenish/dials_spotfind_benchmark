@@ -70,7 +70,7 @@ TEST(ISPC, Initial) {
       if (SAT[idx].N != src.prefound_SAT[idx].N
           || SAT[idx].sum != src.prefound_SAT[idx].sum
           || SAT[idx].sumsq != src.prefound_SAT[idx].sumsq) {
-        printf("Mismatch on %d, %d\n ISPC  %d %f %f\npref  %d %f %f\n",
+        printf("Mismatch on %d, %d\n ISPC  %d %f %f\n pref  %d %f %f\n",
                x,
                y,
                SAT[idx].N,
