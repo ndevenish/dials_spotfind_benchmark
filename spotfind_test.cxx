@@ -42,6 +42,9 @@ TEST(ISPC, Initial) {
   std::unique_ptr<int[]> dst(new int[IMAGE_W * IMAGE_H]);
   std::fill(&dst[0], dst.get() + (IMAGE_W * IMAGE_H), 0);
 
+  std::vector<ispc::ExportSATData> SAT;
+  SAT.resize(IMAGE_W * IMAGE_H);
+
   ispc::dispersion_threshold(&src.src.front(),
                              mask.get(),
                              &src.gain.front(),
@@ -58,6 +61,28 @@ TEST(ISPC, Initial) {
   for (int i = 0; i < IMAGE_H * IMAGE_W; ++i) {
     src.dst[i] = dst[i];
   }
+
+  int mismatch = 0;
+  for (int y = 0; y < IMAGE_H; ++y) {
+    for (int x = 0; x < IMAGE_W; ++x) {
+      const int idx = y * IMAGE_W + x;
+      if (SAT[idx].N != src.prefound_SAT[idx].N
+          || SAT[idx].sum != src.prefound_SAT[idx].sum
+          || SAT[idx].sumsq != src.prefound_SAT[idx].sumsq) {
+        printf("Mismatch on %d, %d\n ISPC  %d %f %f\npref  %d %f %f\n",
+               x,
+               y,
+               SAT[idx].N,
+               SAT[idx].sum,
+               SAT[idx].sumsq,
+               src.prefound_SAT[idx].N,
+               src.prefound_SAT[idx].sum,
+               src.prefound_SAT[idx].sumsq);
+        goto skip;
+      }
+    }
+  }
+skip:
   // src.write_array("dispersion.tif", src.pre)
   src.write_array("ispc.tif", src.dst);
 

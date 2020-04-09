@@ -7,6 +7,12 @@ struct Data {
   float_t *sumsq;
 };
 
+struct ExportSATData {
+  int N;
+  double sum;
+  double sumsq;
+};
+
 void compute_sat(uniform int width,
                  uniform int height,
                  const uniform float_input_t src[],
@@ -48,7 +54,8 @@ export void dispersion_threshold(uniform const float_input_t *uniform src,
                                  uniform float sigma_s,
                                  uniform float sigma_b,
                                  uniform float threshold,
-                                 uniform int min_count) {
+                                 uniform int min_count,
+                                 uniform ExportSATData *uniform satData) {
   uniform Data table;
   // Dedicated AOS layout
   table.N = uniform new int[width * height];
@@ -56,6 +63,15 @@ export void dispersion_threshold(uniform const float_input_t *uniform src,
   table.sumsq = uniform new float_t[width * height];
 
   compute_sat(width, height, src, mask, table);
+
+  // Copy over the SAT for diagnostics
+  if (satData) {
+    for (uniform int i = 0; i < (width * height); ++i) {
+      satData[i].N = table.N[i];
+      satData[i].sum = table.sum[i];
+      satData[i].sumsq = table.sumsq[i];
+    }
+  }
 
   foreach (y = 0 ... height, x = 0 ... width) {
     // Get the left, right, top, bottom of the kernel window
@@ -103,6 +119,7 @@ export void dispersion_threshold(uniform const float_input_t *uniform src,
       // bool above_back = a > c;
       // bool above_strong = b > d;
 #if DEBUG
+
       if (x == 2828 && y == 1625) {
         print("Debug DISPERSION x = %, y = %\n", x, y);
         print("top: %\n", top);
