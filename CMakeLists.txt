@@ -71,15 +71,19 @@ endif()
 add_custom_command(OUTPUT dispersion.o dispersion.h
                    COMMAND ${ISPC_EXECUTABLE} -g ${CMAKE_SOURCE_DIR}/dispersion.ispc -o dispersion.o -h dispersion.h
                    DEPENDS dispersion.ispc)
+add_custom_command(OUTPUT summed.o summed.h
+                   COMMAND ${ISPC_EXECUTABLE} -g -O3  ${CMAKE_SOURCE_DIR}/summed.ispc -o summed.o -h summed.h
+                   DEPENDS summed.ispc)
+
 # --target=sse2-i32x8
 add_subdirectory(external)
 # add_subdirectory(fast_hdf5_eiger_read)
 
-add_executable(spotfind_test spotfind_test.cxx dispersion.o)
+add_executable(spotfind_test spotfind_test.cxx dispersion.o summed.o)
 target_link_libraries(spotfind_test PUBLIC Dials::Dials gtest_main tinytiff)
 target_include_directories(spotfind_test PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
-add_executable(spotfind_bm spotfind_bm.cxx dispersion.o)
+add_executable(spotfind_bm spotfind_bm.cxx dispersion.o summed.o)
 target_link_libraries(spotfind_bm PUBLIC Dials::Dials benchmark::benchmark tinytiff)
 target_include_directories(spotfind_bm PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 

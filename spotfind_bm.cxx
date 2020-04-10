@@ -4,6 +4,7 @@
 #include "dispersion.h"
 #include "itt.h"
 #include "spotfind.h"
+#include "summed.h"
 
 using dials::algorithms::DispersionExtendedThreshold;
 using dials::algorithms::DispersionThreshold;
@@ -31,6 +32,7 @@ static void BM_standard_dispersion_gain(benchmark::State& state) {
     algo.threshold_w_gain(src.src, src.mask, src.gain, src.dst);
   }
 }
+
 BENCHMARK_TEMPLATE(BM_standard_dispersion_gain, double)->Unit(benchmark::kMillisecond);
 
 template <class T>
@@ -71,14 +73,14 @@ static void BM_ISPC(benchmark::State& state) {
   for (auto _ : state) {
     ispc::dispersion_threshold(&src.src.front(),
                                mask.get(),
-                               &src.gain.front(),
+                               1.0,
                                dst.get(),
                                IMAGE_W,
                                IMAGE_H,
                                kernel_size_[0],
                                kernel_size_[1],
-                               nsig_s_,
                                nsig_b_,
+                               nsig_s_,
                                threshold_,
                                min_count_,
                                0);
@@ -92,5 +94,39 @@ static void BM_ISPC(benchmark::State& state) {
   src.write_array("ispc.tif", src.dst);
 }
 BENCHMARK(BM_ISPC)->Unit(benchmark::kMillisecond);
+
+static void BM_ISPC_summed(benchmark::State& state) {
+  ImageSource<float, float> src;
+
+  // Convert mask, dst to int because of https://github.com/ispc/ispc/issues/1709
+  std::unique_ptr<int[]> mask(new int[IMAGE_W * IMAGE_H]);
+  std::uninitialized_copy(src.mask.begin(), src.mask.end(), &mask[0]);
+  std::unique_ptr<int[]> dst(new int[IMAGE_W * IMAGE_H]);
+  std::uninitialized_copy(src.dst.begin(), src.dst.end(), &dst[0]);
+
+  BeginTask task("dials.dispersion.benchmark", "ispc_summed");
+  for (auto _ : state) {
+    ispc::dispersion_summed(&src.src.front(),
+                            mask.get(),
+                            1.0,
+                            dst.get(),
+                            IMAGE_W,
+                            IMAGE_H,
+                            kernel_size_[0],
+                            kernel_size_[1],
+                            nsig_b_,
+                            nsig_s_,
+                            threshold_,
+                            min_count_);
+  }
+  task.end();
+  // Copy the result back
+  // for (int i = 0; i < IMAGE_H * IMAGE_W; ++i) {
+  //   src.dst[i] = dst[i];
+  // }
+  // src.write_array("dispersion.tif", src.pre)
+  // src.write_array("ispc.tif", src.dst);
+}
+BENCHMARK(BM_ISPC_summed)->Unit(benchmark::kMillisecond);
 
 BENCHMARK_MAIN();

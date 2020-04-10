@@ -24,7 +24,7 @@ void compute_sat(uniform int width,
     uniform int N = 0;
     uniform float_t sum = 0.0f;
     uniform float_t sumsq = 0.0f;
-    for (uniform int x = 0; x < height; ++x, ++idx) {
+    for (uniform int x = 0; x < width; ++x, ++idx) {
       if (mask[idx] && src[idx] < BIG) {
         N += 1;
         sum += src[idx];
@@ -45,14 +45,14 @@ void compute_sat(uniform int width,
 
 export void dispersion_threshold(uniform const float_input_t *uniform src,
                                  uniform const int *uniform mask,
-                                 uniform const float *uniform gain,
+                                 uniform const float gain,
                                  uniform int *uniform dst,
                                  uniform int width,
                                  uniform int height,
                                  uniform int kernel_xsize,
                                  uniform int kernel_ysize,
-                                 uniform float sigma_s,
                                  uniform float sigma_b,
+                                 uniform float sigma_s,
                                  uniform float threshold,
                                  uniform int min_count,
                                  uniform ExportSATData *uniform satData) {
@@ -86,8 +86,8 @@ export void dispersion_threshold(uniform const float_input_t *uniform src,
     int idx_bl = bottom * width + left;
 
     int N = table.N[idx_br];
-    int sum = table.sum[idx_br];
-    int sumsq = table.sumsq[idx_br];
+    float sum = table.sum[idx_br];
+    double sumsq = table.sumsq[idx_br];
 
     if (left >= 0 && top >= 0) {
       // Slightly unnatural and wrong(ish) way to do this - can blow out
@@ -114,8 +114,8 @@ export void dispersion_threshold(uniform const float_input_t *uniform src,
     if (mask[idx] && N >= min_count && sum >= 0 && src[idx] > threshold) {
       double a = N * sumsq - sum * sum;
       double b = N * src[idx] - sum;
-      double c = gain[idx] * sum * (N - 1 + sigma_b * sqrt((float)(2 * (N - 1))));
-      double d = sigma_s * sqrt(gain[idx] * sum * N);
+      double c = gain * sum * (N - 1 + sigma_b * sqrt((float)(2 * (N - 1))));
+      double d = sigma_s * sqrt(gain * sum * N);
       // bool above_back = a > c;
       // bool above_strong = b > d;
 #if DEBUG

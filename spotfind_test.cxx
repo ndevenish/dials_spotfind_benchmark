@@ -47,7 +47,7 @@ TEST(ISPC, Initial) {
 
   ispc::dispersion_threshold(&src.src.front(),
                              mask.get(),
-                             &src.gain.front(),
+                             1.0,
                              dst.get(),
                              IMAGE_W,
                              IMAGE_H,
