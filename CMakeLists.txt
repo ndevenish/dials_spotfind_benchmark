@@ -69,7 +69,7 @@ endif()
 #		Dials::Dials benchmark::benchmark Eigen::Eigen)
 
 add_custom_command(OUTPUT dispersion.o dispersion.h
-                   COMMAND ${ISPC_EXECUTABLE} -g ${CMAKE_SOURCE_DIR}/dispersion.ispc -o dispersion.o -h dispersion.h
+                   COMMAND ${ISPC_EXECUTABLE} -g -O3 ${CMAKE_SOURCE_DIR}/dispersion.ispc -o dispersion.o -h dispersion.h
                    DEPENDS dispersion.ispc)
 add_custom_command(OUTPUT summed.o summed.h
                    COMMAND ${ISPC_EXECUTABLE} -g -O3  ${CMAKE_SOURCE_DIR}/summed.ispc -o summed.o -h summed.h
