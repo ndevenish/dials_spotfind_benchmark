@@ -15,6 +15,17 @@ export void dispersion_summed(uniform const float_input_t *uniform src,
                               uniform int min_count) {
   uniform const int kernel_xsize = 3;
   uniform const int kernel_ysize = 3;
+
+  uniform const float_t BIG = (1 << 24);
+  // // idx is the global "current index"
+  // for (uniform int y = 0, idx = 0; y < height; ++y) {
+  //     uniform int N = 0;
+  //     uniform float_t sum = 0.0f;
+  //     uniform float_t sumsq = 0.0f;
+  //     for (uniform int x = 0; x < width; ++x, ++idx) {
+  //         if (mask[idx] && src[idx] < BIG) {
+  //             N += 1;
+
   foreach (y = kernel_ysize... height - kernel_ysize,
            x = kernel_xsize... width - kernel_xsize) {
     int N = 0;
@@ -23,9 +34,11 @@ export void dispersion_summed(uniform const float_input_t *uniform src,
     for (int py = y - kernel_ysize; py < y + kernel_ysize; ++py) {
       for (int px = x - kernel_xsize; px < x + kernel_xsize; ++px) {
         int pidx = py * width + px;
-        N += src[pidx];
-        sum += src[pidx];
-        sumsq += src[pidx] * src[pidx];
+        if (mask[pidx] && src[pidx] < BIG) {
+          N += 1;
+          sum += src[pidx];
+          sumsq += src[pidx] * src[pidx];
+        }
       }
     }
     int idx = y * width + x;
