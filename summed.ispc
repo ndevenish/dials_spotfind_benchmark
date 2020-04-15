@@ -26,13 +26,13 @@ export void dispersion_summed(uniform const float_input_t *uniform src,
   //         if (mask[idx] && src[idx] < BIG) {
   //             N += 1;
 
-  foreach (y = kernel_ysize... height - kernel_ysize,
-           x = kernel_xsize... width - kernel_xsize) {
+  foreach (y = (kernel_ysize + 1)... height - kernel_ysize,
+           x = (kernel_xsize + 1)... width - kernel_xsize) {
     int N = 0;
     float sum = 0.0f;
     float sumsq = 0.0;
-    for (int py = y - kernel_ysize; py < y + kernel_ysize; ++py) {
-      for (int px = x - kernel_xsize; px < x + kernel_xsize; ++px) {
+    for (int py = y - kernel_ysize - 1; py < y + kernel_ysize; ++py) {
+      for (int px = x - kernel_xsize - 1; px < x + kernel_xsize; ++px) {
         int pidx = py * width + px;
         if (mask[pidx] && src[pidx] < BIG) {
           N += 1;
