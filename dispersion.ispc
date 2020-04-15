@@ -1,10 +1,10 @@
-typedef double float_t;
-typedef float float_input_t;
+typedef float float_t;
+typedef double float_input_t;
 
 struct Data {
   int *N;
-  float_t *sum;
-  float_t *sumsq;
+  float *sum;
+  double *sumsq;
 };
 
 struct ExportSATData {
@@ -17,18 +17,19 @@ void compute_sat(uniform int width,
                  uniform int height,
                  const uniform float_input_t src[],
                  const uniform int mask[],
-                 uniform Data table) {
+                 uniform Data table,
+                 const uniform float average) {
   uniform const float_t BIG = (1 << 24);
   // idx is the global "current index"
   for (uniform int y = 0, idx = 0; y < height; ++y) {
     uniform int N = 0;
-    uniform float_t sum = 0.0f;
-    uniform float_t sumsq = 0.0f;
+    uniform float sum = 0.0f;
+    uniform double sumsq = 0.0f;
     for (uniform int x = 0; x < width; ++x, ++idx) {
       if (mask[idx] && src[idx] < BIG) {
         N += 1;
         sum += src[idx];
-        sumsq += src[idx] * src[idx];
+        sumsq += (src[idx] * src[idx]) - average;
       }
       if (y == 0) {
         table.N[idx] = N;
@@ -41,6 +42,23 @@ void compute_sat(uniform int width,
       }
     }
   }
+}
+
+uniform float average(const uniform float_input_t *uniform src,
+                      uniform const int *uniform mask,
+                      uniform int width,
+                      uniform int height) {
+  uniform const float_t BIG = (1 << 24);
+  // get the average
+  double sum = 0;
+  int N = 0;
+  foreach (idx = 0 ...(width * height)) {
+    if (mask[idx] && src[idx] < BIG) {
+      sum += src[idx] * src[idx];
+      N += 1;
+    }
+  }
+  return reduce_add(sum) / reduce_add(N);
 }
 
 export void dispersion_threshold(uniform const float_input_t *uniform src,
@@ -60,9 +78,12 @@ export void dispersion_threshold(uniform const float_input_t *uniform src,
   // Dedicated AOS layout
   table.N = uniform new int[width * height];
   table.sum = uniform new float_t[width * height];
-  table.sumsq = uniform new float_t[width * height];
+  table.sumsq = uniform new double[width * height];
 
-  compute_sat(width, height, src, mask, table);
+  uniform float average = average(src, mask, width, height);
+  print("Average: %\n", average);
+
+  compute_sat(width, height, src, mask, table, average);
 
   // Copy over the SAT for diagnostics
   if (satData) {
@@ -96,7 +117,9 @@ export void dispersion_threshold(uniform const float_input_t *uniform src,
       // area = data_br - (data_bl + data_tr) + data_tl;
       N = N - (table.N[idx_bl] + table.N[idx_tr]) + table.N[idx_tl];
       sum = sum - (table.sum[idx_bl] + table.sum[idx_tr]) + table.sum[idx_tl];
-      sumsq = sumsq - (table.sumsq[idx_bl] + table.sumsq[idx_tr]) + table.sumsq[idx_tl];
+      // sumsq = sumsq - (table.sumsq[idx_bl] + table.sumsq[idx_tr]) +
+      // table.sumsq[idx_tl];
+      sumsq = sumsq - table.sumsq[idx_bl] - table.sumsq[idx_tr] + table.sumsq[idx_tl];
       // area = data_br - data_bl - data_tr + data_tl;
     } else if (left >= 0) {
       // area = data_br - data_bl;

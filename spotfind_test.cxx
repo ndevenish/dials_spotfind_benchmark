@@ -34,7 +34,7 @@ TEST(Existing, DispersionGain) {
 }
 
 TEST(ISPC, Initial) {
-  ImageSource<float, float> src;
+  ImageSource<double, float> src;
 
   // Convert mask, dst to int because of https://github.com/ispc/ispc/issues/1709
   std::unique_ptr<int[]> mask(new int[IMAGE_W * IMAGE_H]);
