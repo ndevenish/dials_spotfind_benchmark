@@ -95,8 +95,27 @@ export void dispersion_threshold(uniform const float_input_t *uniform src,
     }
   }
 
+  // Since we ignore the edges... make sure the "found" destination is false
+  foreach (y = 0...kernel_ysize, x = 0...width) {
+    int idx = y * width + x;
+    dst[idx] = false;
+  }
+  foreach (y = (height - kernel_ysize)... height, x = 0...width) {
+    int idx = y * width + x;
+    dst[idx] = false;
+  }
+  foreach (y = kernel_ysize... height - kernel_ysize, x = 0...kernel_xsize) {
+    int idx = y * width + x;
+    dst[idx] = false;
+  }
+  foreach (y = kernel_ysize... height - kernel_ysize,
+           x = (width - kernel_xsize)... width) {
+    int idx = y * width + x;
+    dst[idx] = false;
+  }
+
   foreach (y = kernel_ysize + 1 ... height - kernel_ysize,
-           x = kernel_xsize... width - kernel_xsize) {
+           x = kernel_xsize + 1 ... width - kernel_xsize) {
     // Get the left, right, top, bottom of the kernel window
     int left = x - kernel_xsize - 1;
     int right = x + kernel_xsize;
